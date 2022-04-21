@@ -1,3 +1,5 @@
+import Timer from './timer.js';
+
 const tempoDisplay = document.querySelector('.tempo');
 const tempoText = document.querySelector('.tempo-text');
 const decreaseTempoBtn = document.querySelector('.decrease-tempo');
@@ -8,9 +10,14 @@ const subtractBeats = document.querySelector('.subtract-beats');
 const addBeats = document.querySelector('.add-beats');
 const measureCount = document.querySelector('.measure-count');
 
+const highClick = new Audio('../assets/Perc_Clap_hi.wav');
+const lowClick = new Audio('../assets/Perc_Clap_lo.wav');
+
 let bpm = 140;
 let beatsPerMeasure = 4;
-let tempoTextString = 'Medium';
+let tempoTextString = 'Nice and Steady';
+let count = 0;
+let isRunning = false;
 
 decreaseTempoBtn.addEventListener('click', () => {
     if (bpm <= 20) { return }
@@ -35,17 +42,34 @@ subtractBeats.addEventListener('click', () => {
     if (beatsPerMeasure <= 0) { return }
     beatsPerMeasure--;
     measureCount.textContent = beatsPerMeasure;
+    count = 0;
 });
 
 addBeats.addEventListener('click', () => {
     if (beatsPerMeasure >= 8) { return }
     beatsPerMeasure++;
     measureCount.textContent = beatsPerMeasure;
+    count = 0;
+});
+
+startStopBtn.addEventListener('click', () => {
+    count = 0;
+
+    if (!isRunning) {
+        metronome.start();
+        isRunning = true;
+        startStopBtn.textContent = 'STOP';
+    } else {
+        metronome.stop();
+        isRunning = false;
+        startStopBtn.textContent = 'START';
+    }
 });
 
 function updateMetronome(bpm) {
     tempoDisplay.textContent = bpm;
     tempoSlider.value = bpm;
+    metronome.timeInterval = 60000 / bpm;
 
     if (bpm <= 40) { tempoTextString = "Super Slow" }
     else if (bpm < 80) { tempoTextString = "Slow" }
@@ -59,8 +83,20 @@ function updateMetronome(bpm) {
     tempoText.textContent = tempoTextString; 
 }
 
-function validateTempo() {
-    if (bpm <= 20 || bpm >= 280) {
-        return
+function playClick() {
+    if (count === beatsPerMeasure) {
+        count = 0;
     }
+
+    if (count === 0) {
+        highClick.play();
+        highClick.currentTime = 0;
+    } else {
+        lowClick.play();
+        lowClick.currentTime = 0;
+    }
+
+    count++;
 }
+
+const metronome = new Timer(playClick, 60000 / bpm, { immediate: true });
